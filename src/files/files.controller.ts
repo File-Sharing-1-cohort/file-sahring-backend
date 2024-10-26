@@ -12,6 +12,8 @@ import {
   Res,
   NotFoundException,
   BadRequestException,
+  Body,
+  Query,
 } from '@nestjs/common';
 import { Response } from 'express';
 import { FilesService } from './files.service';
@@ -21,6 +23,7 @@ import {
   ApiConsumes,
   ApiOperation,
   ApiProduces,
+  ApiQuery,
   ApiResponse,
 } from '@nestjs/swagger';
 
@@ -38,11 +41,18 @@ export class FilesController {
           type: 'string',
           format: 'binary',
         },
+        password: {
+          type: 'string',
+          description: 'Optional password to protect the file',
+          example: 'yourPassw0rd',
+          nullable: true,
+        },
       },
     },
   })
   @UseInterceptors(FileInterceptor('file'))
   upload(
+    @Body() body: { password: string },
     @UploadedFile(
       new ParseFilePipe({
         validators: [
@@ -56,7 +66,7 @@ export class FilesController {
     )
     file: Express.Multer.File,
   ) {
-    return this.filesService.upload(file);
+    return this.filesService.upload(file, body);
   }
 
   @Get(':id')
@@ -84,7 +94,17 @@ export class FilesController {
     description: 'Bad Request',
     type: BadRequestException,
   })
-  findOne(@Param('id', ParseIntPipe) id: number, @Res() res: Response) {
-    return this.filesService.getFile(id, res);
+  @ApiQuery({
+    name: 'password',
+    required: false,
+    description: 'Password to access the file, if required',
+    example: 'your_password_here',
+  })
+  findOne(
+    @Query('password') password: string,
+    @Param('id', ParseIntPipe) id: number,
+    @Res() res: Response,
+  ) {
+    return this.filesService.getFile(id, res, password);
   }
 }

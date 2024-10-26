@@ -11,6 +11,8 @@ import { getParams } from '../aws/s3-upload.params';
 import { GetObjectCommand, PutObjectCommand } from '@aws-sdk/client-s3';
 import { Readable } from 'stream';
 import { Response } from 'express';
+import * as bcrypt from 'bcrypt';
+import { genSalt } from 'bcrypt';
 
 @Injectable()
 export class FilesService {
@@ -20,12 +22,16 @@ export class FilesService {
     private fileRepository: Repository<TransferredFile>,
   ) {}
 
-  async upload(file: Express.Multer.File) {
+  async upload(file: Express.Multer.File, body?: { password: string }) {
     const fileRecord = this.fileRepository.create({
       originalFileName: file.originalname,
     });
     const awsFile = await this.fileRepository.save(fileRecord);
     awsFile.awsFileName = awsFile.id + '-' + file.originalname;
+
+    if (body.password) {
+      awsFile.password = await this.hashData(body.password);
+    }
 
     try {
       await this.s3.send(
@@ -42,10 +48,20 @@ export class FilesService {
     }
   }
 
-  async getFile(id: number, res: Response) {
+  async getFile(id: number, res: Response, password?: string) {
     const awsFile = await this.fileRepository.findOneBy({ id });
     if (!awsFile) {
       throw new NotFoundException(`File with id ${id} is not found`);
+    }
+    if (awsFile.password) {
+      if (!password) {
+        throw new BadRequestException(
+          'Password is required to access this file',
+        );
+      }
+      if (!(await this.compareHash(password, awsFile.password))) {
+        throw new BadRequestException('Incorrect password');
+      }
     }
     try {
       const s3Response = (
@@ -63,5 +79,15 @@ export class FilesService {
         `Error retrieving file ${awsFile.awsFileName} from S3: ${error.message}`,
       );
     }
+  }
+
+  async hashData(data: string) {
+    const saltRounds = +process.env.SALT_FOR_BCRYPT;
+    const salt = await genSalt(saltRounds);
+    return await bcrypt.hash(data, salt);
+  }
+
+  async compareHash(password: string, hashedPass: string) {
+    return await bcrypt.compare(password, hashedPass);
   }
 }
