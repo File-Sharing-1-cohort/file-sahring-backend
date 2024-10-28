@@ -49,7 +49,7 @@ export class FilesController {
           new MaxFileSizeValidator({ maxSize: 1024 * 1024 * 50 }),
           new FileTypeValidator({
             fileType:
-              /^(image\/(jpeg|png|gif)|application\/(msword|vnd\.openxmlformats-officedocument\.wordprocessingml\.document|vnd\.ms-excel|vnd\.openxmlformats-officedocument\.spreadsheetml\.sheet|pdf|zip|x-rar-compressed))$/,
+              /^(image\/(jpeg|png|gif)|application\/(msword|vnd\.openxmlformats-officedocument\.wordprocessingml\.document|vnd\.ms-excel|vnd\.openxmlformats-officedocument\.spreadsheetml\.sheet|pdf|zip|rar|x-rar-compressed))$/,
           }),
         ],
       }),
