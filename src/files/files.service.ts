@@ -90,7 +90,7 @@ export class FilesService {
       s3Response.pipe(
         res.set({
           'Content-Type': 'application/octet-stream',
-          'Content-Disposition': `attachment;`,
+          'Content-Disposition': `attachment;  filename="${encodeURIComponent(awsFile.originalFileName)}"`,
         }),
       );
     } catch (error) {
