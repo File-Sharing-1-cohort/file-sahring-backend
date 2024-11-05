@@ -14,6 +14,7 @@ import { Response } from 'express';
 import * as bcrypt from 'bcrypt';
 import { genSalt } from 'bcrypt';
 import { fileTypeFromBuffer } from 'file-type';
+import { instanceToPlain } from 'class-transformer';
 
 @Injectable()
 export class FilesService {
@@ -65,6 +66,24 @@ export class FilesService {
         error,
       );
     }
+  }
+
+  async getFileInfo(id: number, password?: string) {
+    const awsFile = await this.fileRepository.findOneBy({ id });
+    if (!awsFile) {
+      throw new NotFoundException(`File with id ${id} is not found`);
+    }    
+    if (awsFile.password) {
+      if (!password) {
+        throw new BadRequestException(
+          'Password is required to access this file',
+        );
+      }
+      if (!(await this.compareHash(password, awsFile.password))) {
+        throw new BadRequestException('Incorrect password');
+      }
+    }
+    return instanceToPlain(awsFile);
   }
 
   async getFile(id: number, res: Response, password?: string) {
