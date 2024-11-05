@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { FilesService } from './files.service';
+import { FilesService } from './files.service.js';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { TransferredFile } from './entities/file.entity';
+import { TransferredFile } from './entities/file.entity.js';
 import { Repository } from 'typeorm';
 import { S3Client } from '@aws-sdk/client-s3';
 
