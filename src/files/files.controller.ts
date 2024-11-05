@@ -16,7 +16,7 @@ import {
   Query,
 } from '@nestjs/common';
 import { Response } from 'express';
-import { FilesService } from './files.service';
+import { FilesService } from './files.service.js';
 import { FileInterceptor } from '@nestjs/platform-express';
 import {
   ApiBody,
@@ -51,22 +51,18 @@ export class FilesController {
     },
   })
   @UseInterceptors(FileInterceptor('file'))
-  upload(
+  async upload(
     @Body() body: { password: string },
     @UploadedFile(
       new ParseFilePipe({
         validators: [
           new MaxFileSizeValidator({ maxSize: 1024 * 1024 * 50 }),
-          new FileTypeValidator({
-            fileType:
-              /^(image\/(jpeg|png|gif)|application\/(msword|vnd\.openxmlformats-officedocument\.wordprocessingml\.document|vnd\.ms-excel|vnd\.openxmlformats-officedocument\.spreadsheetml\.sheet|pdf|zip|rar|x-rar-compressed))$/,
-          }),
         ],
       }),
     )
     file: Express.Multer.File,
   ) {
-    return this.filesService.upload(file, body);
+    return await this.filesService.upload(file, body);
   }
 
   @Get(':id')

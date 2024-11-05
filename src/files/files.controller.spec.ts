@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { FilesController } from './files.controller';
-import { FilesService } from './files.service';
+import { FilesController } from './files.controller.js';
+import { FilesService } from './files.service.js';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { Response } from 'express';
 

@@ -6,13 +6,14 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { TransferredFile } from './entities/file.entity';
-import { getParams } from '../aws/s3-upload.params';
+import { TransferredFile } from './entities/file.entity.js';
+import { getParams } from '../aws/s3-upload.params.js';
 import { GetObjectCommand, PutObjectCommand } from '@aws-sdk/client-s3';
 import { Readable } from 'stream';
 import { Response } from 'express';
 import * as bcrypt from 'bcrypt';
 import { genSalt } from 'bcrypt';
+import { fileTypeFromBuffer } from 'file-type';
 
 @Injectable()
 export class FilesService {
@@ -23,6 +24,23 @@ export class FilesService {
   ) {}
 
   async upload(file: Express.Multer.File, body?: { password: string }) {
+    const allowedMimeTypes = [
+      'application/zip',
+      'application/x-7z-compressed',
+      'application/x-rar-compressed',
+      'image/jpeg',
+      'image/png',
+      'image/gif',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // DOCX
+      'application/msword', // DOC
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // XLSX
+      'application/vnd.ms-excel', // XLS
+    ];   
+    const fileTypeResult = await fileTypeFromBuffer(file.buffer);    
+    if (!fileTypeResult || !allowedMimeTypes.includes(fileTypeResult.mime)) {
+      throw new BadRequestException(`Invalid file type. Allowed types are: ${allowedMimeTypes.join(', ')}`);
+    }
+
     const fileRecord = this.fileRepository.create({
       originalFileName: file.originalname,
     });

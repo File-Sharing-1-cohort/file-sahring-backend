@@ -3,7 +3,7 @@ import {
   Injectable,
   InternalServerErrorException,
 } from '@nestjs/common';
-import { getParams } from './aws/s3-upload.params';
+import { getParams } from './aws/s3-upload.params.js';
 import { GetObjectCommand } from '@aws-sdk/client-s3';
 import { Response } from 'express';
 import { Readable } from 'stream';
