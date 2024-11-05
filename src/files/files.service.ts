@@ -21,7 +21,7 @@ export class FilesService {
     @Inject('S3_CLIENT') private s3,
     @InjectRepository(TransferredFile)
     private fileRepository: Repository<TransferredFile>,
-  ) {}
+  ) { }
 
   async upload(file: Express.Multer.File, body?: { password: string }) {
     const allowedMimeTypes = [
@@ -35,8 +35,9 @@ export class FilesService {
       'application/msword', // DOC
       'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // XLSX
       'application/vnd.ms-excel', // XLS
-    ];   
-    const fileTypeResult = await fileTypeFromBuffer(file.buffer);    
+      'application/pdf'
+    ];
+    const fileTypeResult = await fileTypeFromBuffer(file.buffer);
     if (!fileTypeResult || !allowedMimeTypes.includes(fileTypeResult.mime)) {
       throw new BadRequestException(`Invalid file type. Allowed types are: ${allowedMimeTypes.join(', ')}`);
     }
@@ -89,7 +90,7 @@ export class FilesService {
       s3Response.pipe(
         res.set({
           'Content-Type': 'application/octet-stream',
-          'Content-Disposition': `attachment; filename="${awsFile.originalFileName}"`,
+          'Content-Disposition': `attachment;`,
         }),
       );
     } catch (error) {
