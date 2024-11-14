@@ -29,7 +29,7 @@ import {
 
 @Controller('files')
 export class FilesController {
-  constructor(private readonly filesService: FilesService) {}
+  constructor(private readonly filesService: FilesService) { }
 
   @Post()
   @ApiConsumes('multipart/form-data')
@@ -64,6 +64,19 @@ export class FilesController {
   ) {
     return await this.filesService.upload(file, body);
   }
+  @Get('metadata/:id')
+  @ApiOperation({ summary: 'Get information about file from DB' })
+  @ApiQuery({
+    name: 'password',
+    required: false,
+    description: 'Password to access the file, if required',
+    example: '',
+  })
+  async getInfo(
+    @Query('password') password: string,
+    @Param('id', ParseIntPipe) id: number,) {
+      return this.filesService.getFileInfo(id, password)
+    }
 
   @Get(':id')
   @ApiOperation({ summary: 'Get fileName from DB, and download file from S3' })
