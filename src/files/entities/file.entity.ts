@@ -1,4 +1,4 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn } from 'typeorm';
 import { Exclude } from 'class-transformer';
 
 @Entity('file')
@@ -18,4 +18,10 @@ export class TransferredFile {
   @Column({ nullable: true })
   @Exclude()
   password: string;
+
+  @CreateDateColumn({ type: 'timestamptz' })
+  loadedAt: Date;
+
+  @Column({ default: 24 })
+  expirationHours: number;
 }

@@ -7,7 +7,6 @@ import {
   UploadedFile,
   ParseFilePipe,
   MaxFileSizeValidator,
-  FileTypeValidator,
   ParseIntPipe,
   Res,
   NotFoundException,

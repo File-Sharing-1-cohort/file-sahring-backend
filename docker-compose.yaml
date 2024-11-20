@@ -1,0 +1,11 @@
+version: '3'
+services:
+  postgres_db:
+    container_name: 'postgtres_db'
+    image: postgres:latest
+    ports:
+      - '5432:5432'
+    env_file:
+      - sql.env
+    volumes:
+      - ./dump:/docker-entrypoint-initdb.d
