@@ -22,9 +22,12 @@ export class FilesService {
     @Inject('S3_CLIENT') private s3,
     @InjectRepository(TransferredFile)
     private fileRepository: Repository<TransferredFile>,
-  ) { }
+  ) {}
 
-  async upload(file: Express.Multer.File, body?: { password: string }) {
+  async upload(
+    file: Express.Multer.File,
+    body?: { password: string; expirationHours: number },
+  ) {
     const allowedMimeTypes = [
       'application/zip',
       'application/x-7z-compressed',
@@ -36,11 +39,13 @@ export class FilesService {
       'application/msword', // DOC
       'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // XLSX
       'application/vnd.ms-excel', // XLS
-      'application/pdf'
+      'application/pdf',
     ];
     const fileTypeResult = await fileTypeFromBuffer(file.buffer);
     if (!fileTypeResult || !allowedMimeTypes.includes(fileTypeResult.mime)) {
-      throw new BadRequestException(`Invalid file type. Allowed types are: ${allowedMimeTypes.join(', ')}`);
+      throw new BadRequestException(
+        `Invalid file type. Allowed types are: ${allowedMimeTypes.join(', ')}`,
+      );
     }
 
     const fileRecord = this.fileRepository.create({
@@ -48,6 +53,12 @@ export class FilesService {
     });
     const awsFile = await this.fileRepository.save(fileRecord);
     awsFile.awsFileName = awsFile.id + '-' + file.originalname;
+    awsFile.fileSize = file.size;
+    awsFile.fileType = file.mimetype;
+
+    if (body.expirationHours) {
+      awsFile.expirationHours = body.expirationHours;
+    }
 
     if (body.password) {
       awsFile.password = await this.hashData(body.password);
@@ -72,7 +83,7 @@ export class FilesService {
     const awsFile = await this.fileRepository.findOneBy({ id });
     if (!awsFile) {
       throw new NotFoundException(`File with id ${id} is not found`);
-    }    
+    }
     if (awsFile.password) {
       if (!password) {
         throw new BadRequestException(

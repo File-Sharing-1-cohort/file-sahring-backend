@@ -1,7 +1,7 @@
 version: '3'
 services:
   postgres_db:
-    container_name: 'postgtres_db'
+    container_name: 'fs_db'
     image: postgres:latest
     ports:
       - '5432:5432'

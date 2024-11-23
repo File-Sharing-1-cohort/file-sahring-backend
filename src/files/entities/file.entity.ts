@@ -1,4 +1,9 @@
-import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 import { Exclude } from 'class-transformer';
 
 @Entity('file')
@@ -24,4 +29,18 @@ export class TransferredFile {
 
   @Column({ default: 24 })
   expirationHours: number;
+
+  @Column({
+    type: 'bigint',
+    transformer: { to: (value) => value, from: (value) => Number(value) },
+    default: 0,
+  })
+  fileSize: number;
+
+  @Column({ default: false })
+  @Exclude()
+  marketToDelete: boolean;
+
+  @Column({ nullable: true })
+  fileType: string;
 }

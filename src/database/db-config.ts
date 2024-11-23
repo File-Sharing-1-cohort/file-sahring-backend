@@ -1,4 +1,7 @@
 import { DataSource, DataSourceOptions } from 'typeorm';
+import * as dotenv from 'dotenv';
+
+dotenv.config();
 
 export const dataSourceOptionst: DataSourceOptions = {
   type: 'postgres',
@@ -12,6 +15,7 @@ export const dataSourceOptionst: DataSourceOptions = {
   migrationsRun: false,
   synchronize: true,
   logging: ['warn', 'error'],
+  // ssl: false,
   ssl: {
     rejectUnauthorized: false,
   },
