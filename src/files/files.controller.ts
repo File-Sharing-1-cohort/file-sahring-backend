@@ -7,7 +7,6 @@ import {
   UploadedFile,
   ParseFilePipe,
   MaxFileSizeValidator,
-  FileTypeValidator,
   ParseIntPipe,
   Res,
   NotFoundException,
@@ -29,7 +28,7 @@ import {
 
 @Controller('files')
 export class FilesController {
-  constructor(private readonly filesService: FilesService) { }
+  constructor(private readonly filesService: FilesService) {}
 
   @Post()
   @ApiConsumes('multipart/form-data')
@@ -47,17 +46,21 @@ export class FilesController {
           example: 'yourPassw0rd',
           nullable: true,
         },
+        expirationHours:{
+          type: 'number',
+          description: 'Optional expirationHours to save file in cloud',
+          example: 36,
+          nullable: true,
+        },
       },
     },
   })
   @UseInterceptors(FileInterceptor('file'))
   async upload(
-    @Body() body: { password: string },
+    @Body() body: { password: string , expirationHours: number},
     @UploadedFile(
       new ParseFilePipe({
-        validators: [
-          new MaxFileSizeValidator({ maxSize: 1024 * 1024 * 50 }),
-        ],
+        validators: [new MaxFileSizeValidator({ maxSize: 1024 * 1024 * 50 })],
       }),
     )
     file: Express.Multer.File,
@@ -74,9 +77,10 @@ export class FilesController {
   })
   async getInfo(
     @Query('password') password: string,
-    @Param('id', ParseIntPipe) id: number,) {
-      return this.filesService.getFileInfo(id, password)
-    }
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return this.filesService.getFileInfo(id, password);
+  }
 
   @Get(':id')
   @ApiOperation({ summary: 'Get fileName from DB, and download file from S3' })
