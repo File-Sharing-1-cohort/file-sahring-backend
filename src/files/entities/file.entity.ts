@@ -39,7 +39,7 @@ export class TransferredFile {
 
   @Column({ default: false })
   @Exclude()
-  marketToDelete: boolean;
+  markedToDelete: boolean;
 
   @Column({ nullable: true })
   fileType: string;
