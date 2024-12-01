@@ -25,10 +25,7 @@ export class FilesService {
     private fileRepository: Repository<TransferredFile>,
   ) {}
 
-  async upload(
-    file: Express.Multer.File,
-    body?: UploadFileDto,
-  ) {
+  async upload(file: Express.Multer.File, body?: UploadFileDto) {
     const allowedMimeTypes = [
       'application/zip',
       'application/x-7z-compressed',
@@ -41,6 +38,7 @@ export class FilesService {
       'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // XLSX
       'application/vnd.ms-excel', // XLS
       'application/pdf',
+      'application/x-cfb', //DOC/XLS and other MS formats
     ];
     const fileTypeResult = await fileTypeFromBuffer(file.buffer);
     if (!fileTypeResult || !allowedMimeTypes.includes(fileTypeResult.mime)) {
