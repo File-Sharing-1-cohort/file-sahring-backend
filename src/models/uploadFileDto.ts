@@ -19,7 +19,7 @@ export class UploadFileDto {
   @ValidateIf((o) => o.expirationHours !== null && o.expirationHours !== undefined)
   @IsOptional()
   @IsInt({ message: 'Expiration hours must be an integer.' })
-  @Min(0, { message: 'Expiration hours must be at least 1.' })
+  @Min(0, { message: 'Expiration hours must be at least 0.' })
   @ApiProperty({ example: 24, required: false })
   expirationHours?: number;
 }
