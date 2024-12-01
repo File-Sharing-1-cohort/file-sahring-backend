@@ -40,10 +40,32 @@ export class FilesService {
       'application/pdf',
       'application/x-cfb', //DOC/XLS and other MS formats
     ];
+    const allowedExtensions = [
+      'zip',
+      '7z',
+      'rar',
+      'jpg',
+      'jpeg',
+      'png',
+      'gif',
+      'docx',
+      'doc',
+      'xlsx',
+      'xls',
+      'pdf',
+    ];
+
     const fileTypeResult = await fileTypeFromBuffer(file.buffer);
     if (!fileTypeResult || !allowedMimeTypes.includes(fileTypeResult.mime)) {
       throw new BadRequestException(
         `Invalid file type. Allowed types are: ${allowedMimeTypes.join(', ')}`,
+      );
+    }
+
+    const fileExtension = file.originalname.split('.').pop()?.toLowerCase();
+    if (fileExtension && !allowedExtensions.includes(fileExtension)) {
+      throw new BadRequestException(
+        `Invalid file extension. Allowed extensions are: ${allowedExtensions.join(', ')}`,
       );
     }
 
