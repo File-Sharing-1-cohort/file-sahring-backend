@@ -25,6 +25,7 @@ import {
   ApiQuery,
   ApiResponse,
 } from '@nestjs/swagger';
+import { UploadFileDto } from '../models/uploadFileDto.js';
 
 @Controller('files')
 export class FilesController {
@@ -46,7 +47,7 @@ export class FilesController {
           example: 'yourPassw0rd',
           nullable: true,
         },
-        expirationHours:{
+        expirationHours: {
           type: 'number',
           description: 'Optional expirationHours to save file in cloud',
           example: 36,
@@ -57,7 +58,7 @@ export class FilesController {
   })
   @UseInterceptors(FileInterceptor('file'))
   async upload(
-    @Body() body: { password: string , expirationHours: number},
+    @Body() body: UploadFileDto,
     @UploadedFile(
       new ParseFilePipe({
         validators: [new MaxFileSizeValidator({ maxSize: 1024 * 1024 * 50 })],

@@ -15,6 +15,7 @@ import * as bcrypt from 'bcrypt';
 import { genSalt } from 'bcrypt';
 import { fileTypeFromBuffer } from 'file-type';
 import { instanceToPlain } from 'class-transformer';
+import { UploadFileDto } from 'src/models/uploadFileDto.js';
 
 @Injectable()
 export class FilesService {
@@ -26,7 +27,7 @@ export class FilesService {
 
   async upload(
     file: Express.Multer.File,
-    body?: { password: string; expirationHours: number },
+    body?: UploadFileDto,
   ) {
     const allowedMimeTypes = [
       'application/zip',
