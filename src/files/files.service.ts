@@ -1,3 +1,4 @@
+import compressFiles from './compressFiles.js';
 import {
   BadRequestException,
   Inject,
@@ -25,7 +26,7 @@ export class FilesService {
     private fileRepository: Repository<TransferredFile>,
   ) {}
 
-  async upload(file: Express.Multer.File, body?: UploadFileDto) {
+  async upload(files: Express.Multer.File[], body?: UploadFileDto) {
     const allowedMimeTypes = [
       'application/zip',
       'application/x-7z-compressed',
@@ -55,20 +56,80 @@ export class FilesService {
       'pdf',
     ];
 
-    const fileTypeResult = await fileTypeFromBuffer(file.buffer);
-    if (!fileTypeResult || !allowedMimeTypes.includes(fileTypeResult.mime)) {
-      throw new BadRequestException(
-        `Invalid file type. Allowed types are: ${allowedMimeTypes.join(', ')}`,
-      );
+    const isCompressionNeeded = body.isCompressionNeeded;
+    const awsFiles = [];
+
+    for (const file of files) {
+      const fileTypeResult = await fileTypeFromBuffer(file.buffer);
+      if (!fileTypeResult || !allowedMimeTypes.includes(fileTypeResult.mime)) {
+        throw new BadRequestException(
+          `Invalid file type. Allowed types are: ${allowedMimeTypes.join(', ')}`,
+        );
+      }
+
+      const fileExtension = file.originalname.split('.').pop()?.toLowerCase();
+      if (fileExtension && !allowedExtensions.includes(fileExtension)) {
+        throw new BadRequestException(
+          `Invalid file extension. Allowed extensions are: ${allowedExtensions.join(', ')}`,
+        );
+      }
     }
 
-    const fileExtension = file.originalname.split('.').pop()?.toLowerCase();
-    if (fileExtension && !allowedExtensions.includes(fileExtension)) {
-      throw new BadRequestException(
-        `Invalid file extension. Allowed extensions are: ${allowedExtensions.join(', ')}`,
-      );
+    if (isCompressionNeeded === 'true') {
+      const compressedFiles = await compressFiles(files);
+
+      const awsFile = await this.saveFileMetadata(compressedFiles, body);
+
+      try {
+        await this.uploadFileToS3(compressedFiles, awsFile);
+        awsFiles.push(awsFile);
+      } catch (error) {
+        throw new BadRequestException(
+          `Failed to upload ${compressedFiles.originalname} to S3: ${error}`,
+        );
+      }
     }
 
+    if (isCompressionNeeded === 'false') {
+      for (const file of files) {
+        const awsFile = await this.saveFileMetadata(file, body);
+
+        try {
+          await this.uploadFileToS3(file, awsFile);
+          awsFiles.push(awsFile);
+        } catch (error) {
+          throw new BadRequestException(
+            `Failed to upload ${file.originalname} to S3: ${error}`,
+          );
+        }
+      }
+    }
+
+    return awsFiles;
+  }
+
+  private async uploadFileToS3(
+    file: Express.Multer.File,
+    awsFile: TransferredFile,
+  ) {
+    try {
+      await this.s3.send(
+        new PutObjectCommand(getParams(awsFile.awsFileName, file)),
+      );
+
+      awsFile.link = `https://${process.env.AWS_S3_BUCKET_NAME}.s3.amazonaws.com/${awsFile.awsFileName}`;
+      await this.fileRepository.save(awsFile);
+    } catch (error) {
+      throw new BadRequestException(
+        `Error uploading file ${file.originalname} to S3: ${error.message}`,
+      );
+    }
+  }
+
+  private async saveFileMetadata(
+    file: Express.Multer.File,
+    body?: UploadFileDto,
+  ) {
     const fileRecord = this.fileRepository.create({
       originalFileName: file.originalname,
     });
@@ -85,19 +146,7 @@ export class FilesService {
       awsFile.password = await this.hashData(body.password);
     }
 
-    try {
-      await this.s3.send(
-        new PutObjectCommand(getParams(awsFile.awsFileName, file)),
-      );
-
-      awsFile.link = `https://${process.env.AWS_S3_BUCKET_NAME}.s3.amazonaws.com/${awsFile.awsFileName}`;
-      return await this.fileRepository.save(awsFile);
-    } catch (error) {
-      throw new BadRequestException(
-        `Failed to upload ${file.originalname} to S3:`,
-        error,
-      );
-    }
+    return awsFile;
   }
 
   async getFileInfo(id: number, password?: string) {
