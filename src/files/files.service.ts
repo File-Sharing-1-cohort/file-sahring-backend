@@ -1,3 +1,4 @@
+import compressFiles from './compressFiles.js';
 import {
   BadRequestException,
   Inject,
@@ -56,10 +57,14 @@ export class FilesService {
     ];
 
     const isCompressionNeeded = body.isCompressionNeeded;
-    if (isCompressionNeeded === 'true') return 'compress';
 
     const awsFiles = [];
-    if (isCompressionNeeded == 'false') {
+
+    if (isCompressionNeeded === 'true') {
+      files[0] = await compressFiles(files);
+    }
+
+    if (isCompressionNeeded === 'true') {
       for (const file of files) {
         const fileTypeResult = await fileTypeFromBuffer(file.buffer);
         if (
