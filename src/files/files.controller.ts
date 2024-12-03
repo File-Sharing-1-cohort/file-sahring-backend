@@ -56,6 +56,12 @@ export class FilesController {
           example: 36,
           nullable: true,
         },
+        isCompressionNeeded: {
+          type: 'boolean',
+          description: 'If true uploaded files will be compressed',
+          example: true,
+          nullable: true,
+        },
       },
     },
   })

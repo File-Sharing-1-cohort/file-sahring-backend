@@ -16,10 +16,17 @@ export class UploadFileDto {
   @ApiProperty({ example: 'PassW0rd', required: false })
   password?: string;
 
-  @ValidateIf((o) => o.expirationHours !== null && o.expirationHours !== undefined)
+  @ValidateIf(
+    (o) => o.expirationHours !== null && o.expirationHours !== undefined,
+  )
   @IsOptional()
   @IsInt({ message: 'Expiration hours must be an integer.' })
   @Min(0, { message: 'Expiration hours must be at least 0.' })
   @ApiProperty({ example: 24, required: false })
   expirationHours?: number;
+
+  @IsOptional()
+  @IsString()
+  @ApiProperty({ example: true, required: false })
+  isCompressionNeeded?: string; // is string because if declared as boolean received always true
 }

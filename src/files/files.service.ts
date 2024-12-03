@@ -55,55 +55,62 @@ export class FilesService {
       'pdf',
     ];
 
+    const isCompressionNeeded = body.isCompressionNeeded;
+    if (isCompressionNeeded === 'true') return 'compress';
+
     const awsFiles = [];
+    if (isCompressionNeeded == 'false') {
+      for (const file of files) {
+        const fileTypeResult = await fileTypeFromBuffer(file.buffer);
+        if (
+          !fileTypeResult ||
+          !allowedMimeTypes.includes(fileTypeResult.mime)
+        ) {
+          throw new BadRequestException(
+            `Invalid file type. Allowed types are: ${allowedMimeTypes.join(', ')}`,
+          );
+        }
 
-    for (const file of files) {
-      const fileTypeResult = await fileTypeFromBuffer(file.buffer);
-      if (!fileTypeResult || !allowedMimeTypes.includes(fileTypeResult.mime)) {
-        throw new BadRequestException(
-          `Invalid file type. Allowed types are: ${allowedMimeTypes.join(', ')}`,
-        );
+        const fileExtension = file.originalname.split('.').pop()?.toLowerCase();
+        if (fileExtension && !allowedExtensions.includes(fileExtension)) {
+          throw new BadRequestException(
+            `Invalid file extension. Allowed extensions are: ${allowedExtensions.join(', ')}`,
+          );
+        }
+
+        const fileRecord = this.fileRepository.create({
+          originalFileName: file.originalname,
+        });
+        const awsFile = await this.fileRepository.save(fileRecord);
+        awsFile.awsFileName = awsFile.id + '-' + file.originalname;
+        awsFile.fileSize = file.size;
+        awsFile.fileType = file.mimetype;
+
+        if (body?.expirationHours) {
+          awsFile.expirationHours = body.expirationHours;
+        }
+
+        if (body?.password) {
+          awsFile.password = await this.hashData(body.password);
+        }
+
+        try {
+          await this.s3.send(
+            new PutObjectCommand(getParams(awsFile.awsFileName, file)),
+          );
+
+          awsFile.link = `https://${process.env.AWS_S3_BUCKET_NAME}.s3.amazonaws.com/${awsFile.awsFileName}`;
+          await this.fileRepository.save(awsFile);
+          awsFiles.push(awsFile);
+        } catch (error) {
+          throw new BadRequestException(
+            `Failed to upload ${file.originalname} to S3: ${error}`,
+          );
+        }
       }
 
-      const fileExtension = file.originalname.split('.').pop()?.toLowerCase();
-      if (fileExtension && !allowedExtensions.includes(fileExtension)) {
-        throw new BadRequestException(
-          `Invalid file extension. Allowed extensions are: ${allowedExtensions.join(', ')}`,
-        );
-      }
-
-      const fileRecord = this.fileRepository.create({
-        originalFileName: file.originalname,
-      });
-      const awsFile = await this.fileRepository.save(fileRecord);
-      awsFile.awsFileName = awsFile.id + '-' + file.originalname;
-      awsFile.fileSize = file.size;
-      awsFile.fileType = file.mimetype;
-
-      if (body?.expirationHours) {
-        awsFile.expirationHours = body.expirationHours;
-      }
-
-      if (body?.password) {
-        awsFile.password = await this.hashData(body.password);
-      }
-
-      try {
-        await this.s3.send(
-          new PutObjectCommand(getParams(awsFile.awsFileName, file)),
-        );
-
-        awsFile.link = `https://${process.env.AWS_S3_BUCKET_NAME}.s3.amazonaws.com/${awsFile.awsFileName}`;
-        await this.fileRepository.save(awsFile);
-        awsFiles.push(awsFile);
-      } catch (error) {
-        throw new BadRequestException(
-          `Failed to upload ${file.originalname} to S3: ${error}`,
-        );
-      }
+      return awsFiles;
     }
-
-    return awsFiles;
   }
 
   async getFileInfo(id: number, password?: string) {
