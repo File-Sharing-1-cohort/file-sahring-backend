@@ -4,7 +4,7 @@ import {
   Post,
   Param,
   UseInterceptors,
-  UploadedFile,
+  UploadedFiles,
   ParseFilePipe,
   MaxFileSizeValidator,
   ParseIntPipe,
@@ -16,7 +16,7 @@ import {
 } from '@nestjs/common';
 import { Response } from 'express';
 import { FilesService } from './files.service.js';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { FilesInterceptor } from '@nestjs/platform-express';
 import {
   ApiBody,
   ApiConsumes,
@@ -37,9 +37,12 @@ export class FilesController {
     schema: {
       type: 'object',
       properties: {
-        file: {
-          type: 'string',
-          format: 'binary',
+        files: {
+          type: 'array',
+          items: {
+            type: 'string',
+            format: 'binary',
+          },
         },
         password: {
           type: 'string',
@@ -56,18 +59,27 @@ export class FilesController {
       },
     },
   })
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(
+    FilesInterceptor('files', 10, {
+      // 10 files max
+
+      limits: {
+        fileSize: 1024 * 1024 * 50, // 50mb each max
+      },
+    }),
+  )
   async upload(
     @Body() body: UploadFileDto,
-    @UploadedFile(
+    @UploadedFiles(
       new ParseFilePipe({
         validators: [new MaxFileSizeValidator({ maxSize: 1024 * 1024 * 50 })],
       }),
     )
-    file: Express.Multer.File,
+    files: Express.Multer.File[],
   ) {
-    return await this.filesService.upload(file, body);
+    return await this.filesService.upload(files, body);
   }
+
   @Get('metadata/:id')
   @ApiOperation({ summary: 'Get information about file from DB' })
   @ApiQuery({
