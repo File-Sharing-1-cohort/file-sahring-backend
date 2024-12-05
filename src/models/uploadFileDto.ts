@@ -1,5 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { Transform } from 'class-transformer';
 import {
+  IsBoolean,
   IsInt,
   IsOptional,
   IsString,
@@ -25,8 +27,9 @@ export class UploadFileDto {
   @ApiProperty({ example: 24, required: false })
   expirationHours?: number;
 
+  @Transform(({ value }) => value === 'true' || value === true) // Перетворення в булевий тип
+  @IsBoolean()
   @IsOptional()
-  @IsString()
   @ApiProperty({ example: true, required: false })
-  isCompressionNeeded?: string; // is string because if declared as boolean received always true
+  toCompress?: boolean;
 }
