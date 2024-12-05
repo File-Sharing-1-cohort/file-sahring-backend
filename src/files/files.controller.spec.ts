@@ -3,6 +3,7 @@ import { FilesController } from './files.controller.js';
 import { FilesService } from './files.service.js';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { Response } from 'express';
+import { UploadFileDto } from '../models/uploadFileDto.js';
 
 describe('FilesController', () => {
   let controller: FilesController;
@@ -29,7 +30,7 @@ describe('FilesController', () => {
         {
           provide: FilesService,
           useValue: {
-            upload: jest.fn(),
+            upload: jest.fn((body, files) => Promise.resolve([])),
             getFile: jest.fn(),
           },
         },
@@ -47,26 +48,31 @@ describe('FilesController', () => {
   describe('upload', () => {
     fileTypes.forEach((fileType) => {
       it(`should upload a test${fileType} file`, async () => {
+        const body = {
+          password: 'Test123',
+          expirationHours: 2,
+        } as UploadFileDto;
         const file = {
           originalname: `test${fileType}`,
           buffer: Buffer.from('test'),
         } as any;
 
-        await controller.upload(file);
+        await controller.upload(body, [file]);
 
-        expect(service.upload).toHaveBeenCalledWith(file);
+        expect(service.upload).toHaveBeenCalledWith(body, [file]);
       });
     });
 
     it('should throw BadRequestException if file upload fails', async () => {
       service.upload = jest.fn().mockRejectedValue(new BadRequestException());
 
+      const body = { password: 'Test123', expirationHours: 2 } as UploadFileDto;
       const file = {
         originalname: 'test.txt',
         buffer: Buffer.from('test'),
       } as any;
 
-      await expect(controller.upload(file)).rejects.toThrow(
+      await expect(controller.upload(body, [file])).rejects.toThrow(
         BadRequestException,
       );
     });
@@ -79,11 +85,12 @@ describe('FilesController', () => {
         send: jest.fn(),
       } as any as Response;
 
-      const id = 16; // якщо не буде на сервері?
+      const password = 'Test123';
+      const id = 16;
 
-      await controller.findOne(id, res);
+      await controller.findOne(password, id, res);
 
-      expect(service.getFile).toHaveBeenCalledWith(id, res);
+      expect(service.getFile).toHaveBeenCalledWith(password, id, res);
     });
 
     it('should throw NotFoundException if file not found', async () => {
@@ -94,9 +101,10 @@ describe('FilesController', () => {
         send: jest.fn(),
       } as any as Response;
 
-      const id = 2; // немає
+      const password = 'WrongPassword';
+      const id = 2;
 
-      await expect(controller.findOne(id, res)).rejects.toThrow(
+      await expect(controller.findOne(password, id, res)).rejects.toThrow(
         NotFoundException,
       );
     });
@@ -109,9 +117,10 @@ describe('FilesController', () => {
         send: jest.fn(),
       } as any as Response;
 
+      const password = 'Test123';
       const id = 2;
 
-      await expect(controller.findOne(id, res)).rejects.toThrow(
+      await expect(controller.findOne(password, id, res)).rejects.toThrow(
         BadRequestException,
       );
     });
