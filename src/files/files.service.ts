@@ -90,7 +90,7 @@ export class FilesService {
       }
     }
 
-    if (isCompressionNeeded === 'false') {
+    if (isCompressionNeeded !== 'true') {
       for (const file of files) {
         const awsFile = await this.saveFileMetadata(file, body);
 
