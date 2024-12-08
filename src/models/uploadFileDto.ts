@@ -27,7 +27,11 @@ export class UploadFileDto {
   @ApiProperty({ example: 24, required: false })
   expirationHours?: number;
 
-  @Transform(({ value }) => value === 'true' || value === true) // Перетворення в булевий тип
+  @Transform(({ value }) => {   
+    if (value === 'true') return true;
+    if (value === 'false') return false;
+    return value;
+  }) // Перетворення в булевий тип
   @IsBoolean()
   @IsOptional()
   @ApiProperty({ example: true, required: false })

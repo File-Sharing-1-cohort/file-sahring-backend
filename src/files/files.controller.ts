@@ -56,7 +56,7 @@ export class FilesController {
           example: 36,
           nullable: true,
         },
-        isCompressionNeeded: {
+        toCompress: {
           type: 'boolean',
           description: 'If true uploaded files will be compressed',
           example: true,
@@ -68,10 +68,6 @@ export class FilesController {
   @UseInterceptors(
     FilesInterceptor('files', 10, {
       // 10 files max
-
-      limits: {
-        fileSize: 1024 * 1024 * 50, // 50mb each max
-      },
     }),
   )
   async upload(

@@ -22,7 +22,7 @@ async function bootstrap() {
       forbidNonWhitelisted: true, 
       transform: true, 
       transformOptions: {
-        enableImplicitConversion: true, // Автоматично конвертувати типи
+        enableImplicitConversion: false, // Автоматично конвертувати типи
       }
     }),
   );

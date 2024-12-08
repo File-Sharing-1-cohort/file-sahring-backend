@@ -53,7 +53,7 @@ export class FilesService {
       );
 
       awsFile.link = `https://${process.env.AWS_S3_BUCKET_NAME}.s3.amazonaws.com/${awsFile.awsFileName}`;
-      await this.fileRepository.save(awsFile);
+      return await this.fileRepository.save(awsFile);
     } catch (error) {
       throw new BadRequestException(
         `Error uploading file ${file.originalname} to S3: ${error.message}`,
