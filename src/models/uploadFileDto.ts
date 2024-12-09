@@ -18,12 +18,16 @@ export class UploadFileDto {
   @ApiProperty({ example: 'PassW0rd', required: false })
   password?: string;
 
+  @Transform(({ value }) => {
+    const parsedValue = parseInt(value, 10);
+    return isNaN(parsedValue) ? value : parsedValue;
+  })
   @ValidateIf(
     (o) => o.expirationHours !== null && o.expirationHours !== undefined,
   )
   @IsOptional()
   @IsInt({ message: 'Expiration hours must be an integer.' })
-  @Min(0, { message: 'Expiration hours must be at least 0.' })
+  @Min(1, { message: 'Expiration hours must be at least 1.' })
   @ApiProperty({ example: 24, required: false })
   expirationHours?: number;
 
