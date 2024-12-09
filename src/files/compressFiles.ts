@@ -22,8 +22,6 @@ const compressFiles = async (
     buffers.push(chunk);
   });
 
-  archiveStream.on('end', () => {});
-
   for (const file of files) {
     archive.append(file.buffer, { name: file.originalname });
   }
