@@ -50,12 +50,6 @@ export class FilesController {
           example: 'yourPassw0rd',
           nullable: true,
         },
-        expirationHours: {
-          type: 'number',
-          description: 'Optional expirationHours to save file in cloud',
-          example: 36,
-          nullable: true,
-        },
         toCompress: {
           type: 'boolean',
           description: 'If true uploaded files will be compressed',
@@ -66,9 +60,7 @@ export class FilesController {
     },
   })
   @UseInterceptors(
-    FilesInterceptor('files', 10, {
-      // 10 files max
-    }),
+    FilesInterceptor('files', 10, {}),
   )
   async upload(
     @Body() body: UploadFileDto,

@@ -73,10 +73,6 @@ export class FilesService {
     awsFile.fileSize = file.size;
     awsFile.fileType = file.mimetype;
 
-    if (body.expirationHours) {
-      awsFile.expirationHours = body.expirationHours;
-    }
-
     if (body.password) {
       awsFile.password = await this.hashData(body.password);
     }
