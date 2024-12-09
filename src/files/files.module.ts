@@ -5,7 +5,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { TransferredFile } from './entities/file.entity.js';
 import { s3ClientProvider } from '../aws/s3-client.provider.js';
 import { ScheduleModule } from '@nestjs/schedule';
-import { CronService } from './corn.service.js';
+import { CronService } from './cron.service.js';
 
 @Module({
   imports: [
