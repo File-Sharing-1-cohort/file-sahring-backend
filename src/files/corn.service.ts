@@ -15,8 +15,6 @@ export class CronService {
 
   @Cron('* * * * *')
   async handleCron() {
-    console.log(new Date());
-
     const oneDayAgo = new Date();
     oneDayAgo.setHours(oneDayAgo.getHours() - 24);
 
