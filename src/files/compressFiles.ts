@@ -22,12 +22,7 @@ const compressFiles = async (
     buffers.push(chunk);
   });
 
-  archiveStream.on('end', () => {
-    console.log('Archive stream ended');
-  });
-
   for (const file of files) {
-    console.log(`Adding file: ${file.originalname}`);
     archive.append(file.buffer, { name: file.originalname });
   }
 
@@ -37,11 +32,7 @@ const compressFiles = async (
     archive.finalize().catch(reject);
   });
 
-  console.log('Archive finalized');
-
   const buffer = Buffer.concat(buffers);
-
-  console.log('Buffer size:', buffer.length);
 
   const archivedFile: Express.Multer.File = {
     fieldname: 'archive',
