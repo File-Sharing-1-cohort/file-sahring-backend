@@ -13,7 +13,7 @@ export const getParams = (
         Key: fileName,
         Body: file.buffer,
         ContentType: file.mimetype,
-        ACL: 'public-read',
+        ACL: 'private',
       }
     : { Bucket: process.env.AWS_S3_BUCKET_NAME, Key: fileName };
 };
