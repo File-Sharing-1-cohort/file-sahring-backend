@@ -9,7 +9,6 @@ export const resizeImageFileInPercent = async (
   const image = sharp(file.buffer);
 
   const { width, height } = await image.metadata();
-  console.log(width);
   const buffer = await sharp(file.buffer)
     .resize({
       width: Math.round((percent / 100) * width),
