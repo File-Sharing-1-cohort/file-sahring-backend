@@ -1,4 +1,4 @@
-import compressFiles from './compressFiles.js';
+import { compressFiles } from './compressFiles.js';
 import {
   BadRequestException,
   Inject,
@@ -30,6 +30,8 @@ export class FilesService {
     await this.checkFileType(files);
     if (body.toCompress) {
       const compressedFiles = await compressFiles(files);
+      //const compressedFiles = await resizeImageFileInPercent(files[0], 10);
+
       const awsFile = await this.saveFileMetadata(compressedFiles, body);
       return await this.uploadFileToS3(compressedFiles, awsFile);
     } else {
