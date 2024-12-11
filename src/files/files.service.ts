@@ -1,4 +1,4 @@
-import compressFiles from './compressFiles.js';
+import { archiveFiles, resizeImageFileInPercent } from './compressFiles.js';
 import {
   BadRequestException,
   Inject,
@@ -29,7 +29,20 @@ export class FilesService {
   async upload(files: Express.Multer.File[], body?: UploadFileDto) {
     await this.checkFileType(files);
     if (body.toCompress) {
-      const compressedFiles = await compressFiles(files);
+      let compressedFiles;
+      const filesIsOneImage =
+        files[0].mimetype.split('/')[0] == 'image' && !files[1];
+      const percentOfCompression = 10;
+
+      if (filesIsOneImage) {
+        compressedFiles = await resizeImageFileInPercent(
+          files[0],
+          percentOfCompression,
+        );
+      } else {
+        compressedFiles = await archiveFiles(files);
+      }
+
       const awsFile = await this.saveFileMetadata(compressedFiles, body);
       return await this.uploadFileToS3(compressedFiles, awsFile);
     } else {

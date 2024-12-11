@@ -1,7 +1,40 @@
 import { PassThrough } from 'stream';
 import archiver from 'archiver';
+import sharp from 'sharp';
 
-const compressFiles = async (
+export const resizeImageFileInPercent = async (
+  file: Express.Multer.File,
+  percent: number,
+): Promise<Express.Multer.File> => {
+  const image = sharp(file.buffer);
+
+  const { width, height } = await image.metadata();
+  const buffer = await sharp(file.buffer)
+    .resize({
+      width: Math.round((percent / 100) * width),
+      height: Math.round((percent / 100) * height),
+    })
+    .toBuffer();
+
+  const passthroughStream = new PassThrough();
+
+  const compressedFile: Express.Multer.File = {
+    fieldname: file.fieldname,
+    originalname: file.originalname,
+    encoding: file.encoding,
+    mimetype: file.mimetype,
+    size: buffer.length,
+    buffer,
+    destination: file.destination,
+    filename: file.filename,
+    path: file.path,
+    stream: passthroughStream,
+  };
+
+  return compressedFile;
+};
+
+export const archiveFiles = async (
   files: Express.Multer.File[],
 ): Promise<Express.Multer.File> => {
   if (!files || files.length === 0) {
@@ -49,5 +82,3 @@ const compressFiles = async (
 
   return archivedFile;
 };
-
-export default compressFiles;
