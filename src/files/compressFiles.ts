@@ -6,10 +6,10 @@ export const resizeImageFileInPercent = async (
   file: Express.Multer.File,
   percent: number,
 ): Promise<Express.Multer.File> => {
-  // Using sharp instead of imagemagick
   const image = sharp(file.buffer);
 
   const { width, height } = await image.metadata();
+  console.log(width);
   const buffer = await sharp(file.buffer)
     .resize({
       width: Math.round((percent / 100) * width),
@@ -35,7 +35,7 @@ export const resizeImageFileInPercent = async (
   return compressedFile;
 };
 
-export const compressFiles = async (
+export const archiveFiles = async (
   files: Express.Multer.File[],
 ): Promise<Express.Multer.File> => {
   if (!files || files.length === 0) {
