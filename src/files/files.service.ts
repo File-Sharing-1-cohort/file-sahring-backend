@@ -30,8 +30,15 @@ export class FilesService {
     await this.checkFileType(files);
     if (body.toCompress) {
       let compressedFiles;
-      if (files[0].mimetype.split('/')[0] == 'image' && !files[1]) {
-        compressedFiles = await resizeImageFileInPercent(files[0], 10);
+      const filesIsOneImage =
+        files[0].mimetype.split('/')[0] == 'image' && !files[1];
+      const percentOfCompression = 10;
+
+      if (filesIsOneImage) {
+        compressedFiles = await resizeImageFileInPercent(
+          files[0],
+          percentOfCompression,
+        );
       } else {
         compressedFiles = await archiveFiles(files);
       }
