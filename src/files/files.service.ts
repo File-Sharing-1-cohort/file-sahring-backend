@@ -1,4 +1,8 @@
-import { archiveFiles, resizeImageFileInPercent } from './compressFiles.js';
+import {
+  archiveFiles,
+  resizeImageFileInPercent,
+  compressPDF,
+} from './compressFiles.js';
 import {
   BadRequestException,
   Inject,
@@ -33,7 +37,11 @@ export class FilesService {
       const filesIsOneImage =
         files[0].mimetype.split('/')[0] == 'image' && !files[1];
       const percentOfCompression = 10;
+      const filesIsOnePDF = files[0].mimetype == 'application/pdf' && !files[1];
 
+      if (filesIsOnePDF) {
+        compressedFiles = await compressPDF(files[0], percentOfCompression);
+      }
       if (filesIsOneImage) {
         compressedFiles = await resizeImageFileInPercent(
           files[0],

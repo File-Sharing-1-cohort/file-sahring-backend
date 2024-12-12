@@ -2,6 +2,15 @@ import { PassThrough } from 'stream';
 import archiver from 'archiver';
 import sharp from 'sharp';
 
+export const compressPDF = async (
+  file: Express.Multer.File,
+  percent: number,
+): Promise<Express.Multer.File> => {
+  const compressedFile = file;
+  console.log(file);
+  return compressedFile;
+};
+
 export const resizeImageFileInPercent = async (
   file: Express.Multer.File,
   percent: number,
