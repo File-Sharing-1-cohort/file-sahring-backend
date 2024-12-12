@@ -44,7 +44,8 @@ export class FilesService {
       }
 
       const awsFile = await this.saveFileMetadata(compressedFiles, body);
-      return await this.uploadFileToS3(compressedFiles, awsFile);
+
+      return [await this.uploadFileToS3(compressedFiles, awsFile)];
     } else {
       const uploadedFiles = [];
       for (const file of files) {
