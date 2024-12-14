@@ -15,9 +15,7 @@ export const compressPDF = async (
       method: 'POST',
       headers: {
         Accept: 'application/json',
-        'Api-Key':
-          process.env.PDF_COMPRESSION_API_KEY ||
-          'b2d164db-a1dd-4ffa-b955-fdee20fa205c',
+        'Api-Key': process.env.PDF_COMPRESSION_API_KEY,
       },
       body: form,
     });
