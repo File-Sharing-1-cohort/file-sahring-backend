@@ -1,7 +1,6 @@
 import { PassThrough } from 'stream';
 import archiver from 'archiver';
 import sharp from 'sharp';
-
 import fetch from 'node-fetch';
 import FormData from 'form-data';
 
@@ -12,33 +11,31 @@ export const compressPDF = async (
     const form = new FormData();
     form.append('file', file.buffer, file.originalname);
     form.append('compression_level', 'high');
-
     const response = await fetch('https://api.pdfrest.com/compressed-pdf', {
       method: 'POST',
       headers: {
         Accept: 'application/json',
-        'Api-Key': 'b2d164db-a1dd-4ffa-b955-fdee20fa205c',
+        'Api-Key':
+          process.env.PDF_COMPRESSION_API_KEY ||
+          'b2d164db-a1dd-4ffa-b955-fdee20fa205c',
       },
       body: form,
     });
-    console.log(response);
     if (!response.ok) {
       throw new Error(`API error: ${response.statusText}`);
     }
 
     const result = await response.json();
+    const compressedPDFResponse = await fetch(result.outputUrl);
+    const compressedPDFBuffer = await compressedPDFResponse.buffer();
 
-    const compressedFileResponse = await fetch(result.outputUrl);
-    const compressedFileBuffer = await compressedFileResponse.buffer();
-
-    const compressedFile: Express.Multer.File = {
+    const compressedPDF: Express.Multer.File = {
       ...file,
-      buffer: compressedFileBuffer,
-      size: compressedFileBuffer.length,
+      buffer: compressedPDFBuffer,
+      size: compressedPDFBuffer.length,
       mimetype: 'application/pdf',
     };
-
-    return compressedFile;
+    return compressedPDF;
   } catch (error) {
     console.error('Error during compression:', error);
     return null;
