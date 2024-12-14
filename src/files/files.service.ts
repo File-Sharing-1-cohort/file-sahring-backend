@@ -47,7 +47,6 @@ export class FilesService {
           percentOfCompression,
         );
       } else {
-        console.log(files[0].mimetype);
         compressedFiles = await archiveFiles(files);
       }
 
