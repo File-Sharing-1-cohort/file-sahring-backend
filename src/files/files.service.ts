@@ -40,14 +40,14 @@ export class FilesService {
       const filesIsOnePDF = files[0].mimetype == 'application/pdf' && !files[1];
 
       if (filesIsOnePDF) {
-        compressedFiles = await compressPDF(files[0], percentOfCompression);
-      }
-      if (filesIsOneImage) {
+        compressedFiles = await compressPDF(files[0]);
+      } else if (filesIsOneImage) {
         compressedFiles = await resizeImageFileInPercent(
           files[0],
           percentOfCompression,
         );
       } else {
+        console.log(files[0].mimetype);
         compressedFiles = await archiveFiles(files);
       }
 
