@@ -13,7 +13,7 @@ export class CronService {
     private readonly fileRepository: Repository<TransferredFile>,
   ) {}
 
-  @Cron('0 * * * *')
+  @Cron('* * * * *')
   async handleCron() {
     const oneDayAgo = new Date();
     oneDayAgo.setHours(oneDayAgo.getHours() - 24);
