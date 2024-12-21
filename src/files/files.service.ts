@@ -48,6 +48,10 @@ export class FilesService {
         );
       } else {
         compressedFiles = await archiveFiles(files);
+        const compressedFilesBiggerThanMaxSize =
+          compressedFiles.size > 1024 * 1024 * 50;
+        if (compressedFilesBiggerThanMaxSize)
+          return 'File size is too large, even after compression.';
       }
 
       const awsFile = await this.saveFileMetadata(compressedFiles, body);
