@@ -104,19 +104,35 @@ export const archiveFiles = async (
   });
 
   const buffer = Buffer.concat(buffers);
+  if (files.length > 1) {
+    const archivedFile: Express.Multer.File = {
+      fieldname: 'archive',
+      originalname: 'archive.zip',
+      encoding: '7bit',
+      mimetype: 'application/zip',
+      size: buffer.length,
+      buffer,
+      destination: '',
+      filename: 'archive.zip',
+      path: '',
+      stream: archiveStream,
+    };
 
-  const archivedFile: Express.Multer.File = {
-    fieldname: 'archive',
-    originalname: 'archive.zip',
-    encoding: '7bit',
-    mimetype: 'application/zip',
-    size: buffer.length,
-    buffer,
-    destination: '',
-    filename: 'archive.zip',
-    path: '',
-    stream: archiveStream,
-  };
+    return archivedFile;
+  } else {
+    const archivedFile: Express.Multer.File = {
+      fieldname: files[0].fieldname,
+      originalname: files[0].originalname + '.zip',
+      encoding: '7bit',
+      mimetype: 'application/zip',
+      size: buffer.length,
+      buffer,
+      destination: '',
+      filename: files[0].originalname + '.zip',
+      path: '',
+      stream: archiveStream,
+    };
 
-  return archivedFile;
+    return archivedFile;
+  }
 };
