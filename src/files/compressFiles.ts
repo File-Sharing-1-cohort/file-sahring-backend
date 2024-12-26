@@ -9,23 +9,26 @@ export const compressPDF = async (
 ): Promise<Express.Multer.File | null> => {
   try {
     const form = new FormData();
-    form.append('file', file.buffer, file.originalname);
-    form.append('compression_level', 'high');
-    const response = await fetch('https://api.pdfrest.com/compressed-pdf', {
-      method: 'POST',
-      headers: {
-        Accept: 'application/json',
-        'Api-Key': process.env.PDF_COMPRESSION_API_KEY,
+    form.append('fileInput', file.buffer, file.originalname);
+    form.append('optimizeLevel', '5');
+
+    const response = await fetch(
+      'https://stirling-pdf-hx46.onrender.com/api/v1/misc/compress-pdf',
+      {
+        method: 'POST',
+        headers: {
+          'Api-Key': process.env.PDF_COMPRESSION_API_KEY,
+          ...form.getHeaders(),
+        },
+        body: form,
       },
-      body: form,
-    });
+    );
+
     if (!response.ok) {
       throw new Error(`API error: ${response.statusText}`);
     }
 
-    const result = await response.json();
-    const compressedPDFResponse = await fetch(result.outputUrl);
-    const compressedPDFBuffer = await compressedPDFResponse.buffer();
+    const compressedPDFBuffer = await response.buffer();
 
     const compressedPDF: Express.Multer.File = {
       ...file,
@@ -33,6 +36,7 @@ export const compressPDF = async (
       size: compressedPDFBuffer.length,
       mimetype: 'application/pdf',
     };
+
     return compressedPDF;
   } catch (error) {
     console.error('Error during compression:', error);
