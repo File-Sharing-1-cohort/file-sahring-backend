@@ -11,15 +11,11 @@ export const compressPDF = async (
     const form = new FormData();
     form.append('fileInput', file.buffer, file.originalname);
     form.append('optimizeLevel', '5');
-    console.log(1);
     const response = await fetch(
       'https://stirling-pdf-twr2.onrender.com/api/v1/misc/compress-pdf',
       {
         method: 'POST',
-        headers: {
-          'Api-Key': process.env.PDF_COMPRESSION_API_KEY,
-          ...form.getHeaders(),
-        },
+
         body: form,
       },
     );
