@@ -13,7 +13,7 @@ export const compressPDF = async (
     form.append('optimizeLevel', '5');
 
     const response = await fetch(
-      'https://stirling-pdf-hx46.onrender.com/api/v1/misc/compress-pdf',
+      'https://stirling-pdf-twr2.onrender.com/api/v1/misc/compress-pdf',
       {
         method: 'POST',
         headers: {
