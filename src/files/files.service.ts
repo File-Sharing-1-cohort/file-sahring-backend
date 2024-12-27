@@ -41,6 +41,8 @@ export class FilesService {
 
       if (filesIsOnePDF) {
         compressedFiles = await compressPDF(files[0]);
+        if (!compressedFiles)
+          throw new BadRequestException('Error during PDF compression');
       } else if (filesIsOneImage) {
         compressedFiles = await resizeImageFileInPercent(
           files[0],
@@ -49,7 +51,9 @@ export class FilesService {
       } else {
         compressedFiles = await archiveFiles(files);
         if (compressedFiles.size > 1024 * 1024 * 50)
-          throw new BadRequestException('File size is too large, even after compression.');
+          throw new BadRequestException(
+            'File size is too large, even after compression.',
+          );
       }
 
       const awsFile = await this.saveFileMetadata(compressedFiles, body);
