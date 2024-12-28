@@ -65,18 +65,10 @@ export class FilesController {
       },
     },
   })
-  @UseInterceptors(
-    FilesInterceptor('files', 10, {
-      // 10 files max
-    }),
-  )
+  @UseInterceptors(FilesInterceptor('files', 10, {}))
   async upload(
     @Body() body: UploadFileDto,
-    @UploadedFiles(
-      new ParseFilePipe({
-        validators: [new MaxFileSizeValidator({ maxSize: 1024 * 1024 * 50 })],
-      }),
-    )
+    @UploadedFiles()
     files: Express.Multer.File[],
   ) {
     return await this.filesService.upload(files, body);
