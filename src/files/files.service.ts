@@ -5,6 +5,8 @@ import {
 } from './compressFiles.js';
 import {
   BadRequestException,
+  HttpException,
+  HttpStatus,
   Inject,
   Injectable,
   NotFoundException,
@@ -32,6 +34,9 @@ export class FilesService {
 
   async upload(files: Express.Multer.File[], body?: UploadFileDto) {
     await this.checkFileType(files);
+    if (!body.toCompress) {
+      await this.checkFilesSize(files);
+    }
     if (body.toCompress) {
       let compressedFiles;
       const filesIsOneImage =
@@ -60,14 +65,37 @@ export class FilesService {
 
       return [await this.uploadFileToS3(compressedFiles, awsFile)];
     } else {
-      const uploadedFiles = [];
-      for (const file of files) {
-        const awsFile = await this.saveFileMetadata(file, body);
-        await this.uploadFileToS3(file, awsFile);
-        uploadedFiles.push(awsFile);
-      }
-      return uploadedFiles;
+      return await this.uploadMultipleFiles(files, body);
     }
+  }
+
+  private async checkFilesSize(files: Express.Multer.File[]) {
+    let check: boolean = true;
+    const MAX_FILE_SIZE = 50 * 1024 * 1024;
+    for (const file of files) {
+      if (file.size > MAX_FILE_SIZE) {
+        check = false;
+      }
+    }
+    if (!check) {
+      throw new HttpException(
+        `Payload Too Large: One or more files exceed the maximum size of ${MAX_FILE_SIZE} bytes.`,
+        HttpStatus.PAYLOAD_TOO_LARGE,
+      );
+    }
+  }
+
+  private async uploadMultipleFiles(
+    files: Express.Multer.File[],
+    info?: UploadFileDto,
+  ) {
+    const uploadedFiles = [];
+    for (const file of files) {
+      const awsFile = await this.saveFileMetadata(file, info);
+      await this.uploadFileToS3(file, awsFile);
+      uploadedFiles.push(awsFile);
+    }
+    return uploadedFiles;
   }
 
   private async uploadFileToS3(
