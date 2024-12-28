@@ -1,8 +1,4 @@
-import {
-  archiveFiles,
-  resizeImageFileInPercent,
-  compressPDF,
-} from './compressFiles.js';
+import { archiveFiles, resizeImage, compressPDF } from './compressFiles.js';
 import {
   BadRequestException,
   HttpException,
@@ -34,52 +30,34 @@ export class FilesService {
 
   async upload(files: Express.Multer.File[], body?: UploadFileDto) {
     await this.checkFileType(files);
-    if (!body.toCompress) {
-      await this.checkFilesSize(files);
-    }
+    const filesToUpload: Express.Multer.File[] = [];
     if (body.toCompress) {
-      let compressedFiles;
-      const filesIsOneImage =
-        files[0].mimetype.split('/')[0] == 'image' && !files[1];
-      const percentOfCompression = 10;
-      const filesIsOnePDF = files[0].mimetype == 'application/pdf' && !files[1];
-
-      if (filesIsOnePDF) {
-        compressedFiles = await compressPDF(files[0]);
-        if (!compressedFiles)
-          throw new BadRequestException('Error during PDF compression');
-      } else if (filesIsOneImage) {
-        compressedFiles = await resizeImageFileInPercent(
-          files[0],
-          percentOfCompression,
-        );
+      if (files.length != 1) {
+        filesToUpload.push(await archiveFiles(files));
       } else {
-        compressedFiles = await archiveFiles(files);
-        if (compressedFiles.size > 1024 * 1024 * 50)
-          throw new BadRequestException(
-            'File size is too large, even after compression.',
-          );
+        const fileType = files[0].mimetype.split('/')[0];
+        if (fileType == 'image') {
+          filesToUpload.push(await resizeImage(files[0]));
+        }
+        if (fileType == 'application/pdf') {
+          filesToUpload.push(await compressPDF(files[0]));
+        }
       }
-
-      const awsFile = await this.saveFileMetadata(compressedFiles, body);
-
-      return [await this.uploadFileToS3(compressedFiles, awsFile)];
-    } else {
-      return await this.uploadMultipleFiles(files, body);
     }
+    await this.checkFileSize(files);
+    return await this.uploadMultipleFiles(filesToUpload, body);
   }
 
-  private async checkFilesSize(files: Express.Multer.File[]) {
+  private async checkFileSize(files: Express.Multer.File[]) {
     let check: boolean = true;
-    const MAX_FILE_SIZE = 50 * 1024 * 1024;
     for (const file of files) {
-      if (file.size > MAX_FILE_SIZE) {
+      if (file.size > +process.env.MAX_FILE_SIZE) {
         check = false;
       }
     }
     if (!check) {
       throw new HttpException(
-        `Payload Too Large: One or more files exceed the maximum size of ${MAX_FILE_SIZE} bytes.`,
+        `Payload Too Large: One or more files exceed the maximum size of ${process.env.MAX_FILE_SIZE} bytes.`,
         HttpStatus.PAYLOAD_TOO_LARGE,
       );
     }
