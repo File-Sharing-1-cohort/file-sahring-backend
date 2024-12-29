@@ -30,7 +30,7 @@ export class FilesService {
 
   async upload(files: Express.Multer.File[], body?: UploadFileDto) {
     await this.checkFileType(files);
-    const filesToUpload: Express.Multer.File[] = files;
+    const filesToUpload: Express.Multer.File[] = [];
     if (body.toCompress) {
       if (files.length != 1) {
         filesToUpload.push(await archiveFiles(files));
@@ -43,6 +43,8 @@ export class FilesService {
           filesToUpload.push(await compressPDF(files[0]));
         }
       }
+    } else {
+      filesToUpload.push(...files);
     }
     await this.checkFileSize(filesToUpload);
     return await this.uploadMultipleFiles(filesToUpload, body);
