@@ -8,9 +8,13 @@ export const compressPDF = async (
   file: Express.Multer.File,
 ): Promise<Express.Multer.File | null> => {
   try {
+    const compressionLevel: string =
+      +process.env.PDF_COMPRESSION >= 1 && +process.env.PDF_COMPRESSION <= 5
+        ? process.env.PDF_COMPRESSION
+        : '5';
     const form = new FormData();
     form.append('fileInput', file.buffer, file.originalname);
-    form.append('optimizeLevel', '5');
+    form.append('optimizeLevel', compressionLevel);
     const response = await fetch(
       'https://stirling-pdf-twr2.onrender.com/api/v1/misc/compress-pdf',
       {
@@ -43,7 +47,10 @@ export const resizeImage = async (
   file: Express.Multer.File,
 ): Promise<Express.Multer.File> => {
   const image = sharp(file.buffer);
-  const percent = +process.env.COMPRESSION_PERCENT;
+  const percent =
+    +process.env.IMAGE_COMPRESSION > 0 && +process.env.IMAGE_COMPRESSION < 100
+      ? +process.env.IMAGE_COMPRESSION
+      : 10;
 
   const { width, height } = await image.metadata();
   const buffer = await sharp(file.buffer)
@@ -78,8 +85,13 @@ export const archiveFiles = async (
     throw new Error('No files provided for compression');
   }
 
+  const compressionLevel: number =
+    +process.env.ARCHIVE_COMPRESSION >= 1 &&
+    +process.env.ARCHIVE_COMPRESSION <= 9
+      ? +process.env.ARCHIVE_COMPRESSION
+      : 9;
   const archiveStream = new PassThrough();
-  const archive = archiver('zip', { zlib: { level: 9 } });
+  const archive = archiver('zip', { zlib: { level: compressionLevel } });
   const buffers: Buffer[] = [];
 
   archive.pipe(archiveStream);
