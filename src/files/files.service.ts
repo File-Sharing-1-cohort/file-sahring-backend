@@ -1,4 +1,3 @@
-import { archiveFiles, resizeImage, compressPDF } from './compressFiles.js';
 import {
   BadRequestException,
   HttpException,
@@ -19,6 +18,7 @@ import { genSalt } from 'bcrypt';
 import { fileTypeFromBuffer } from 'file-type';
 import { instanceToPlain } from 'class-transformer';
 import { UploadFileDto } from 'src/models/uploadFileDto.js';
+import { FileCompressionService } from '../file-compression/file-compression.service.js';
 
 @Injectable()
 export class FilesService {
@@ -26,22 +26,32 @@ export class FilesService {
     @Inject('S3_CLIENT') private s3,
     @InjectRepository(TransferredFile)
     private fileRepository: Repository<TransferredFile>,
+    private fileCompressionService: FileCompressionService,
   ) {}
 
   async upload(files: Express.Multer.File[], body?: UploadFileDto) {
     await this.checkFileType(files);
     const filesToUpload: Express.Multer.File[] = [];
     if (body.toCompress) {
-      if (files.length != 1) {
-        filesToUpload.push(await archiveFiles(files));
+      const fileType = files[0].mimetype.split('/');
+      if (
+        files.length == 1 &&
+        (fileType[0] == 'image' || fileType[1] == 'pdf')
+      ) {
+        if (fileType[0] == 'image') {
+          filesToUpload.push(
+            await this.fileCompressionService.resizeImage(files[0]),
+          );
+        }
+        if (fileType[1] == 'pdf') {
+          filesToUpload.push(
+            await this.fileCompressionService.compressPDF(files[0]),
+          );
+        }
       } else {
-        const fileType = files[0].mimetype.split('/')[0];
-        if (fileType == 'image') {
-          filesToUpload.push(await resizeImage(files[0]));
-        }
-        if (fileType == 'application/pdf') {
-          filesToUpload.push(await compressPDF(files[0]));
-        }
+        filesToUpload.push(
+          await this.fileCompressionService.archiveFiles(files),
+        );
       }
     } else {
       filesToUpload.push(...files);

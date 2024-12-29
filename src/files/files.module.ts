@@ -6,6 +6,7 @@ import { TransferredFile } from './entities/file.entity.js';
 import { s3ClientProvider } from '../aws/s3-client.provider.js';
 import { ScheduleModule } from '@nestjs/schedule';
 import { CronService } from './cron.service.js';
+import { FileCompressionService } from '../file-compression/file-compression.service.js';
 
 @Module({
   imports: [
@@ -13,6 +14,6 @@ import { CronService } from './cron.service.js';
     ScheduleModule.forRoot(),
   ],
   controllers: [FilesController],
-  providers: [FilesService, s3ClientProvider, CronService],
+  providers: [FilesService, s3ClientProvider, CronService, FileCompressionService],
 })
 export class FilesModule {}
