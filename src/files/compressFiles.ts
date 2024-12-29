@@ -15,7 +15,6 @@ export const compressPDF = async (
       'https://stirling-pdf-twr2.onrender.com/api/v1/misc/compress-pdf',
       {
         method: 'POST',
-
         body: form,
       },
     );
@@ -40,11 +39,11 @@ export const compressPDF = async (
   }
 };
 
-export const resizeImageFileInPercent = async (
+export const resizeImage = async (
   file: Express.Multer.File,
-  percent: number,
 ): Promise<Express.Multer.File> => {
   const image = sharp(file.buffer);
+  const percent = +process.env.COMPRESSION_PERCENT;
 
   const { width, height } = await image.metadata();
   const buffer = await sharp(file.buffer)
