@@ -38,14 +38,18 @@ export class FilesService {
         files.length == 1 &&
         (fileType[0] == 'image' || fileType[1] == 'pdf')
       ) {
-        if (fileType[0] == 'image') {
-          filesToUpload.push(
-            await this.fileCompressionService.resizeImage(files[0]),
-          );
-        }
         if (fileType[1] == 'pdf') {
           filesToUpload.push(
             await this.fileCompressionService.compressPDF(files[0]),
+          );
+        }
+        if (fileType[1] == 'gif') {
+          filesToUpload.push(
+            await this.fileCompressionService.resizeGif(files[0]),
+          );
+        } else if (fileType[0] == 'image') {
+          filesToUpload.push(
+            await this.fileCompressionService.resizeImage(files[0]),
           );
         }
       } else {

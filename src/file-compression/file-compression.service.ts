@@ -4,9 +4,47 @@ import archiver from 'archiver';
 import sharp from 'sharp';
 import fetch from 'node-fetch';
 import FormData from 'form-data';
+import gifResize from '@gumlet/gif-resize';
+import gifInfo from 'gif-info';
 
 @Injectable()
 export class FileCompressionService {
+  resizeGif = async (
+    file: Express.Multer.File,
+  ): Promise<Express.Multer.File> => {
+    const percent =
+      +process.env.IMAGE_COMPRESSION > 0 && +process.env.IMAGE_COMPRESSION < 100
+        ? +process.env.IMAGE_COMPRESSION
+        : 10;
+    const arrayBuffer = file.buffer.buffer.slice(
+      file.buffer.byteOffset,
+      file.buffer.byteOffset + file.buffer.byteLength,
+    );
+
+    const width = gifInfo(arrayBuffer).width;
+    console.log(width);
+    const buffer = await gifResize({
+      width: Math.round((percent / 100) * width),
+    })(file.buffer);
+
+    const passthroughStream = new PassThrough();
+
+    const compressedFile: Express.Multer.File = {
+      fieldname: file.fieldname,
+      originalname: file.originalname,
+      encoding: file.encoding,
+      mimetype: file.mimetype,
+      size: buffer.length,
+      buffer,
+      destination: file.destination,
+      filename: file.filename,
+      path: file.path,
+      stream: passthroughStream,
+    };
+
+    return compressedFile;
+  };
+
   compressPDF = async (
     file: Express.Multer.File,
   ): Promise<Express.Multer.File | null> => {
