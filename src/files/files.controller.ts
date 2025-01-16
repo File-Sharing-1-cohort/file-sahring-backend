@@ -5,7 +5,6 @@ import {
   Param,
   UseInterceptors,
   UploadedFiles,
-  Header,
   ParseFilePipe,
   MaxFileSizeValidator,
   ParseIntPipe,
@@ -76,7 +75,6 @@ export class FilesController {
   }
 
   @Get('metadata/:id')
-  @Header('Content-Disposition', 'attachment')
   @ApiOperation({ summary: 'Get information about file from DB' })
   @ApiQuery({
     name: 'password',
